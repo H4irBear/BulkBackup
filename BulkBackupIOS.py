@@ -12,8 +12,7 @@ device = {
 
 # Parse CLI arguments (nargs='+' imports the arg as a list. Important as we want to treat file based and cli based args with the same for loop.)
 parser = argparse.ArgumentParser(description="Backup multiple IOS device configs and info to file.")
-parser.add_argument('--devices','-d', nargs='?', help='File containing list of devices on which to run commands. Is overridden by --device. If not specified, uses BulkBackupIOS.hosts file. Format is <ip/hostname>,<file prefix>. If no prefix is specified, <ip/hostname> is used to name the files.')
-parser.add_argument('--device','-D', nargs='+', help='Name of device on which to run commands. Overrides --devices.')
+parser.add_argument('device_list', help='File containing list of devices on which to run commands. Is overridden by --device. Format is <ip/hostname>,<file prefix>. If no prefix is specified, <ip/hostname> is used to name the files.')
 parser.add_argument('--user','-u', nargs='?', help='User with which to run the command. If not specified, you will be prompted.')
 parser.add_argument('--password','-p', nargs='?', help='Password with which to run the command. If not specified you will be prompted.')
 parser.add_argument('--write','-w', action='store_true', help='Write config prior to backup.')
@@ -31,12 +30,7 @@ else:
     device["password"] = getpass.getpass()
 
 # Populate the hosts variable.
-if args.device:
-    hosts = args.device
-elif args.devices:
-    hosts = open(args.devices)
-else:
-    hosts = open('./BulkBackupIOS.hosts')
+hosts = open(args.device_list)
    
 # Set the date and time
 now = datetime.now()
