@@ -16,6 +16,7 @@ parser.add_argument('--devices','-d', nargs='?', help='File containing list of d
 parser.add_argument('--device','-D', nargs='+', help='Name of device on which to run commands. Overrides --devices.')
 parser.add_argument('--user','-u', nargs='?', help='User with which to run the command. If not specified, you will be prompted.')
 parser.add_argument('--password','-p', nargs='?', help='Password with which to run the command. If not specified you will be prompted.')
+parser.add_argument('--write','-w', action='store_true', help='Write config prior to backup.')
 args = parser.parse_args()
 
 # Check if you have the args you need and, if not, get them. Used to populate the device dictionary above.
@@ -51,19 +52,30 @@ for host in hosts:
     filename = desc+now.strftime("_%Y%m%d_%H%M")
 
     # Use a context handler (with/as) to cleanly close ssh when done.  Passing kwargs from device dictionary.
+    print(f"Connecting to {device['host']}...")
     with ConnectHandler(**device) as ssh:
         output_config = ""   # define output, as we only append to it later
         output_info = now.strftime("Información recopilada el %d/%m/%Y, a las %H:%M:%S\n\n")
         
+        # Write config
+        if args.write:
+            print("  - Saving config: ",end='')
+            print(ssh.send_command('write memory').replace("\n",""))
+            
+            
+            
         # Define commands
         commands_config = ['show startup-config']
         commands_info = ['show version','show switch','show vlan','show interface status','show ip interface brief','show cdp neighbor','show cdp neighbor detail','show license all','show ap summary','show ap tag summary','show ap uptime','show redundancy','show chassis']
         
         # Execute config retreival commands
+        print("  - Collecting config...",end='')
         for command in commands_config:
             output_config += ssh.send_command(command)
+        print('[OK]')
         
         # Execute info retreival commands
+        print("  - Collecting device info...",end='')
         for command in commands_info:
             temp_output = ssh.send_command(command)
             if not 'Invalid input detected' in temp_output:
@@ -72,10 +84,13 @@ for host in hosts:
                 output_info += "###############################\n\n"
                 output_info += temp_output
                 output_info += "\n\n\n"
+        print('[OK]')
             
         
         # Write files using context manager
+        print("  - Writing to file...",end='')
         with open(f"./{filename}.conf",'w') as open_file:
             open_file.write(output_config)
         with open(f"./{filename}.info",'w') as open_file:
             open_file.write(output_info)
+        print("[OK]\n")
