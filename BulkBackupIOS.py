@@ -59,8 +59,8 @@ for host in hosts:
         
         # Write config
         if args.write:
-            print("  - Saving config: ",end='')
-            print(ssh.send_command('write memory').replace("\n",""))
+            print("  - Saving config: ",end='', flush=True)
+            print(ssh.send_command('write memory',read_timeout=120).replace("\n",""))
             
             
             
@@ -69,13 +69,13 @@ for host in hosts:
         commands_info = ['show version','show switch','show vlan','show interface status','show ip interface brief','show cdp neighbor','show cdp neighbor detail','show license all','show ap summary','show ap tag summary','show ap uptime','show redundancy','show chassis']
         
         # Execute config retreival commands
-        print("  - Collecting config...",end='')
+        print("  - Collecting config...",end='', flush=True)
         for command in commands_config:
             output_config += ssh.send_command(command)
         print('[OK]')
         
         # Execute info retreival commands
-        print("  - Collecting device info...",end='')
+        print("  - Collecting device info...",end='', flush=True)
         for command in commands_info:
             temp_output = ssh.send_command(command)
             if not 'Invalid input detected' in temp_output:
@@ -88,7 +88,7 @@ for host in hosts:
             
         
         # Write files using context manager
-        print("  - Writing to file...",end='')
+        print("  - Writing to file...",end='', flush=True)
         with open(f"./{filename}.conf",'w') as open_file:
             open_file.write(output_config)
         with open(f"./{filename}.info",'w') as open_file:
